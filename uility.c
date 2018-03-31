@@ -1,6 +1,6 @@
-#include<uility.h>
+#include "uility.h"
 
-int paramGetDataVal(param* data, uint8* val, uint16 length)
+int paramGetDataVal(paramData* data, uint8* val, uint16 length)
 {
 	if((data->index+length)>data->len)
 	{
@@ -70,4 +70,62 @@ int msgGet8bitVal(uint8* msg, uint8 * val)
 	*val = msg[index++];
 	msg = msg+index;
 	return 0;
+}
+
+int msgGetDataVal(uint8* msg, uint8* val, uint16 len)
+{
+	if(msg != NULL && val !=NULL)
+	{
+		if(len > 0)
+		{
+			memcpy(val, msg, len);
+			msg = msg + len;
+			return 0;	
+		}
+	}
+	return -1;
+}
+
+int msgGet16bitVal(uint8* msg, uint8* val)
+{
+	if(msg != NULL && val != NULL)
+	{
+		*val = msg[0];
+		*val = (uint16)((*val) << 8);
+		*val = (uint16)((*val)|(msg[1]));
+		msg = msg + 2;
+		return 0;
+	}
+	return -1;
+}
+
+int msgSet8bitVal(uint8* msg, uint8 val)
+{
+	if(msg != NULL)
+	{
+		msg[0] = val;
+		msg = msg + 1;
+		return 0;
+	}
+	return -1;
+}
+
+int msgSet16bitVal(uint8* msg, uint16 val)
+{
+	if(msg != NULL)
+	{
+		msg[0] = (uint8)(val >> 8);
+		msg[1] = (uint8)(val & 0xFF);
+		msg = msg + 2;
+	}
+}
+
+int msgSetDataVal(uint8* msg, uint8* val, uint16 len)
+{
+	if((msg != NULL)&&(val != NULL))
+	{
+		memcpy(msg, val, len);
+		msg = msg + len;
+	}
+	return -1;
 }
