@@ -91,6 +91,7 @@ int msgServerHandler(uint8* message)
 	//paramGet8bitVal(param, &messageType);
 	if((msgGet8bitVal(msg, &messageType)) == 0)
 	{
+		printf("message type: %d\n", messageType);
 		switch(messageType)
 		{
 			case MSG_TYPE_REGISTER_REQ:
@@ -149,10 +150,18 @@ int msgServerSendMessage(uint8* message)
 	uint16	msgLength = 0;
 	uint8	destIP[20] = {0};
 	uint8*	pMessage = NULL;
+	uint16	index = 1;
 
-	msgGet16bitVal(message, &IPLength);
-	msgGetDataVal(message, &destIP[0], IPLength);
-	msgGet16bitVal(message, &msgLength);
+	msgGet16bitVal(message+index, &IPLength);
+	index = index + 2;
+	msgGetDataVal(message+index, &destIP[0], IPLength);
+	index = index + IPLength;
+	msgGet16bitVal(message+index, &msgLength);
+	index = index + 2;
+
+	printf("IPLength :%d\n", IPLength);
+	printf("IP: %s\n",destIP );
+	printf("msgLength :%d\n", msgLength);
 
 	if(msgLength > 0)
 	{
@@ -160,14 +169,15 @@ int msgServerSendMessage(uint8* message)
 	}
 	if(pMessage != NULL)
 	{
-		msgGetDataVal(message, pMessage, msgLength);
+		memset(pMessage, 0, msgLength+1);
+		msgGetDataVal(message+index, pMessage, msgLength);
 	}
 
 	if(1 == addrIsInvalid(destIP, IPLength))
 	{
 		return 1;
 	}
-
+	printf("Message :%s\n", pMessage);
 	sendMessageToDest(destIP, IPLength, pMessage, msgLength);
 
 	free(pMessage);
@@ -194,16 +204,23 @@ uint8 addrIsInvalid(uint8* address, uint16 length)
 uint8 sendMessageToDest(uint8* addr, uint16 addrLength, uint8* message, uint16 msgLength)
 {
 	uint8* buff = sendMsgBuff;
+	uint16 index = 0;
 	if((addr != NULL) && (message != NULL))
 	{
 		uint8* fromAddr = inet_ntoa(clientAddr.sin_addr);
 
+		msgSet8bitVal(buff+index, MSG_TYPE_MESSAGE);
+		index = index + 1;
 		/*set Msg From addr*/
 		msgSet16bitVal(buff, strlen(fromAddr));
+		index = index + 2;
 		msgSetDataVal(buff, fromAddr, strlen(fromAddr));
+		index = index + strlen(fromAddr);
 
 		msgSet16bitVal(buff, msgLength);
+		index = index + 2;
 		msgSetDataVal(buff, message, msgLength);
+		index = index + msgLength;
 		socketServerMsgSend2Client(addr, addrLength);
 	}
 	return 1;

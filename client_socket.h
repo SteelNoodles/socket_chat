@@ -7,14 +7,13 @@
 #include<sys/types.h>
 #include<arpa/inet.h>
 
-typedef enum
-{
-	MSG_TYPE_REGISTER_REQ,
-	MSG_TYPE_SIGN_IN_REQ,
-	MSG_TYPE_ONLINE_MSG_REQ,
-	MSG_TYPE_MESSAGE
-}MSG_type;
 
 int clientSendMessage();
+uint8 clientMessageHandler();
+uint8 messagePrase(uint8* message);
+uint8 clientRecMessage();
+int clientGetMessage();
+int socketClientInit();
+
 
 #endif

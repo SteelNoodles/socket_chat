@@ -1,5 +1,8 @@
 #include "uility.h"
 
+#define DEVICE_NAME_LENGTH 5
+#define DEVICE_IP_LENGTH   13
+
 int paramGetDataVal(paramData* data, uint8* val, uint16 length)
 {
 	if((data->index+length)>data->len)
@@ -128,4 +131,52 @@ int msgSetDataVal(uint8* msg, uint8* val, uint16 len)
 		msg = msg + len;
 	}
 	return -1;
+}
+
+
+unsigned char* findDevice(unsigned char* device)
+{
+	
+	int result = 0;
+	FILE * fp = NULL;
+	unsigned char* pDevice = device;
+
+	result = system("ifconfig > /home/alcht/share/log.txt");
+	if(result == 0)
+	{
+		fp = fopen("/home/alcht/share/log.txt", "r+");
+		if(fp != NULL)
+		{
+			fgets(pDevice, DEVICE_NAME_LENGTH, fp);
+			printf("Device: %s\n", pDevice);
+		}
+	}
+	return pDevice;
+}
+
+int getLocalIPByIoctl(unsigned char* pDeviceIP)
+{
+	int inet_sock;
+    struct ifreq ifr;
+    unsigned char device[DEVICE_NAME_LENGTH] = {0};
+    inet_sock = socket(AF_INET, SOCK_DGRAM, 0);
+
+    if(pDeviceIP == NULL)
+    {
+    	printf("Illegal param\n");
+    	return -1;
+    }
+    /*get network device*/
+    findDevice(device);
+    strcpy(ifr.ifr_name, (unsigned char*)device);
+    
+    //SIOCGIFADDR标志代表获取接口地址
+    if (ioctl(inet_sock, SIOCGIFADDR, &ifr) <  0)
+    {
+            perror("ioctl");
+            return -1;
+    }
+    memcpy(pDeviceIP, inet_ntoa(((struct sockaddr_in*)&(ifr.ifr_addr))->sin_addr), DEVICE_IP_LENGTH);
+    printf("%s\n", pDeviceIP);
+    return 0;
 }
